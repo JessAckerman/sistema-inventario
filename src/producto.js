@@ -7,7 +7,7 @@ class Producto {
   }
 
   mostrarInformacion() {
-    console.log("Información del producto");
+    console.log("Producto disponible");
     console.log(`Código: ${this.codigo}`);
     console.log(`Nombre: ${this.nombre}`);
     console.log(`Precio: $${this.precio.toFixed(2)}`);
