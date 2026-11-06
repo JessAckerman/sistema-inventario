@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v6
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Verificar los modulos del proyecto
+        run: |
+          for archivo in src/*.js; do
+            echo "Verificando $archivo"
+            node "$archivo"
+          done
