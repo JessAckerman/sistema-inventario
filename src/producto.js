@@ -6,7 +6,7 @@ class Producto {
     this.existencia = existencia;
   }
 
-  mostrarInformacion( {
+  mostrarInformacion() {
     console.log("Producto disponible");
     console.log(`Código: ${this.codigo}`);
     console.log(`Nombre: ${this.nombre}`);
