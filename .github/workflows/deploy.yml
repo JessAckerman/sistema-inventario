@@ -1,0 +1,85 @@
+name: Despliegue del Sistema de Inventario
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version liberada a desplegar, por ejemplo v1.0.2"
+        required: true
+  workflow_run:
+    workflows: ["Liberacion del Sistema de Inventario"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version || github.event.workflow_run.head_branch }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+
+    steps:
+      - name: Validar la version
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version no valida: $VERSION"
+            exit 1
+          fi
+          echo "Version a desplegar: $VERSION"
+
+      - name: Descargar version liberada
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "sistema-inventario-$VERSION.zip"
+
+      - name: Preparar directorio
+        run: |
+          mkdir -p "despliegue/version-$VERSION"
+          unzip -o "sistema-inventario-$VERSION.zip" -d "despliegue/version-$VERSION"
+
+      - name: Verificar archivos
+        run: ls -R despliegue
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Ejecutar el sistema desplegado
+        working-directory: despliegue/version-${{ env.VERSION }}
+        run: |
+          for archivo in src/*.js; do
+            echo "== node $archivo"
+            node "$archivo"
+          done
+
+      - name: Transferir paquete al servidor
+        if: env.DEPLOY_HOST != ''
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          source: sistema-inventario-${{ env.VERSION }}.zip
+          target: ~/sistema-inventario/
+
+      - name: Preparar version en el servidor
+        if: env.DEPLOY_HOST != ''
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          envs: VERSION
+          script: |
+            cd ~/sistema-inventario
+            mkdir -p "version-$VERSION"
+            unzip -o "sistema-inventario-$VERSION.zip" -d "version-$VERSION"
+            ls -R "version-$VERSION"
+            cd "version-$VERSION"
+            for archivo in src/*.js; do node "$archivo"; done
