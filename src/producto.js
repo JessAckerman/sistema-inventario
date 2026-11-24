@@ -10,7 +10,7 @@ class Producto {
     console.log("Producto disponible");
     console.log(`Código: ${this.codigo}`);
     console.log(`Nombre: ${this.nombre}`);
-    console.log(`Precio: $${this.precio.toFixed(2)}`);
+    console.log(`Precio: $${(this.precio * 1.16).toFixed(2)}`);
     console.log(`Existencia: ${this.existencia}`);
   }
 }
