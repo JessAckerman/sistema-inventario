@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## v1.1.0
+
+Fecha: 2026-11-24
+
+- Nuevo punto de entrada `src/main.js`: registra productos en el inventario y los consulta por código.
+- Workflow de despliegue que descarga la versión liberada, la extrae y la ejecuta.
+
 ## v1.0.2
 
 Fecha: 2026-11-24
